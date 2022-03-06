@@ -1,0 +1,24 @@
+.modaloverlay {
+    color:#000;
+    width: 60vw;
+    height: 80vh;
+    padding: 2rem 3rem;
+    background-color: #EFFFFD;
+    border-radius: 0.5em;
+    z-index: 999;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+}
+
+.backDrop {
+    width: 100%;
+    height: 100vh;
+    opacity: .7;
+    background-color: #000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 5;
+}
