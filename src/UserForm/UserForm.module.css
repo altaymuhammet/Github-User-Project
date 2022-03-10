@@ -25,7 +25,8 @@
     padding: .6rem 1.1rem;
     border: none;
     border-radius: .5rem;
-    background-color: #EFFFFD;
+    background-color: #487f63;
+    color: #fff;
     box-shadow: 0 0 10px #b7c0bf;
     display: flex;
     justify-content: space-evenly;
@@ -36,5 +37,5 @@
 
 .button:hover {
     color: #FFFFFF;
-    background-color: #42C2FF;
+    background-color: #518d6e;
 }

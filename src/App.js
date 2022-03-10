@@ -12,21 +12,40 @@ function App() {
   const [showCurrentUser, setShowCurrentUser] = useState(false);
   const [wrongUserName, setWrongUserName] = useState(false);
   const [detailedUser, setDetailedUser] = useState();
+  const [addedUser, setAddedUser] = useState(false);
 
-  const inputValueHandler = (value) => {
-    setValue(value);
+  const inputValueHandler = (v) => {
+    if (v === "") {
+      setError(true);
+    }
+    setTimeout(() => {
+      setError(false);
+    }, 2000);
+    if (users.length > 0) {
+      users.map((user) => {
+        if (v === user.login.toLowerCase()) {
+          setAddedUser(true);
+          setTimeout(() => {
+            setAddedUser(false);
+          }, 2000);
+        }
+      });
+    }
+    setValue(v);
   };
 
   useEffect(() => {
-    let newUsers = [];
+    let newUsers = users.length > 0 ? [...users] : [];
 
-    if (value === "") {
+    if (value === "" || value === undefined) {
       setWrongUserName(false);
       setError(true);
+      setTimeout(() => {
+        setError(false);
+      }, 2000);
       return;
     }
-
-    fetch(` https://api.github.com/users/${value}`)
+    fetch(`https://api.github.com/users/${value}`)
       .then((response) => {
         if (response.status === 200) {
           setWrongUserName(false);
@@ -35,12 +54,18 @@ function App() {
         } else {
           setError(false);
           setWrongUserName(true);
+          setTimeout(() => {
+            setWrongUserName(false);
+          }, 2000);
         }
       })
-      .then(data => {
-        console.log(data)
+      .then((data) => {
         if (data.login !== "null") {
-          newUsers = [data, ...users];
+          const checkedUsers = users.filter((user) => {
+            return user.id !== data.id;
+          });
+          newUsers = [data, ...checkedUsers];
+          setUsers(newUsers);
         }
         setUsers(newUsers);
       })
@@ -52,43 +77,57 @@ function App() {
   };
 
   const detailHandler = (id) => {
-    const newDetailedUser = users.filter( user => user.id === id)
+    const newDetailedUser = users.filter((user) => user.id === id);
     setDetailedUser(newDetailedUser);
     setShowCurrentUser(true);
   };
 
+  const deleteUserHandler = (id) => {
+    const newUsers = users.filter((user) => user.id !== id);
+    setUsers(newUsers);
+    setValue(null);
+  };
+
+  const changeHandler = (v) => {
+    setAddedUser(false);
+    setError(v);
+    setWrongUserName(v);
+  };
+
+  const warningStyles = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: "100%",
+    fontWeight: "bold",
+    color: "#fff",
+    padding: "1rem 1rem",
+    backgroundColor: "darkred",
+    textAlign: "center"
+  };
+
   return (
     <div className="App">
+      {error && <p style={warningStyles}>Please type a username!</p>}
+      {wrongUserName && <p style={warningStyles}>Wrong username!</p>}
+      {addedUser && (
+        <p style={warningStyles}>This user already added to list!</p>
+      )}
+      {showCurrentUser && (
+        <CurrentUser onClick={currentUserHandler} user={detailedUser} />
+      )}
       <Header />
-      <UserForm getInputValue={inputValueHandler} />
-      {error &&  (
-        <p
-          style={{
-            fontWeight: "bold",
-            color: "#fff",
-            padding: ".5rem 1rem",
-            backgroundColor: "darkred",
-            borderRadius: ".5rem",
-          }}
-        >
-          Please type a username!
-        </p>
+      <UserForm
+        getInputValue={inputValueHandler}
+        changeHandler={changeHandler}
+      />
+      {users.length > 0 && (
+        <UsersList
+          allUsers={users}
+          onClick={detailHandler}
+          onDelete={deleteUserHandler}
+        />
       )}
-      {wrongUserName && (
-        <p
-          style={{
-            fontWeight: "bold",
-            color: "#fff",
-            padding: ".5rem 1rem",
-            backgroundColor: "darkred",
-            borderRadius: ".5rem",
-          }}
-        >
-          Wrong username!
-        </p>
-      )}
-      {showCurrentUser && <CurrentUser onClick={currentUserHandler} user={detailedUser} />}
-      {users.length > 0 && <UsersList allUsers={users} onClick={detailHandler} />}
     </div>
   );
 }

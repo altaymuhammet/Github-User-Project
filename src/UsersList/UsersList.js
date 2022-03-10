@@ -4,7 +4,11 @@ import classes from "./UsersList.module.css";
 const UsersList = (props) => {
 
   const clickHandler = (e) => {
-    props.onClick(Number(e.target.parentElement.parentElement.id));
+    props.onClick(Number(e.target.parentNode.parentNode.parentNode.id));
+  };
+
+  const deleteHandler = (e) => {
+    props.onDelete(Number(e.target.parentNode.parentNode.parentNode.id));
   };
 
   return (
@@ -19,9 +23,12 @@ const UsersList = (props) => {
                   <span style={{ fontWeight: "bold", color: "darkcyan"}}>
                     Username: &nbsp; &nbsp;
                   </span>
-                  {user.login}
+                  {user.login.toLowerCase()}
                 </p>
-                <button className={classes.button} onClick={clickHandler} >See Details</button>
+                <div className={classes.buttoncontainer}>
+                <button className={classes.button} onClick={clickHandler} >Details</button>
+                <button className={classes.deletebutton} onClick={deleteHandler}>Delete</button>
+                </div>
               </div>
             </li>
           );
