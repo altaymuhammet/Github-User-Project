@@ -3,7 +3,7 @@
     width: 60vw;
     height: 80vh;
     padding:2rem 3rem;
-    background-color: #f0b86c;
+    background: #fdf9f0;
     border-radius: 0.5em;
     display: flex;
     flex-direction: column;
@@ -29,9 +29,10 @@
 
 .img {
     width: 200px;
+    border: 1px solid #1a2e39;
     border-radius: 50%;
     margin-bottom: 2rem;
-    box-shadow: 0 0 20px 1px #a57635;
+    box-shadow: 0 0 20px 5px #b9bcbd;
 }
 
 .list {
@@ -56,7 +57,7 @@
 }
 
 .close {
-    color: rgb(206, 70, 70);
+    color: rgb(182, 4, 4);
     font-size: 3rem;
     position: absolute;
     top: -.9rem;

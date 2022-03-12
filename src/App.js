@@ -1,101 +1,128 @@
 import "./App.css";
-import React, { useState, useEffect } from "react";
+import React, {useEffect, useReducer } from "react";
 import Header from "./Header/Header";
 import UserForm from "./UserForm/UserForm";
 import CurrentUser from "./CurrentUser/CurrentUser";
 import UsersList from "./UsersList/UsersList";
 
+const stateReducer = (state, action) => {
+  if (action.type === "CURRENTUSER_STATE") {
+    return { ...state, showCurrentUser: action.val };
+  }
+  if (action.type === "VALUE_STATE") {
+    return { ...state, value: action.val };
+  }
+  if (action.type === "SETUSERS_STATE") {
+    return { ...state, users: action.val };
+  }
+  if (action.type === "ERROR_STATE") {
+    return { ...state, error: action.val };
+  }
+  if (action.type === "WRONGUSERNAME_STATE") {
+    return { ...state, wrongUserName: action.val };
+  }
+  if (action.type === "DETAILEDUSER_STATE") {
+    return { ...state, detailedUser: action.val };
+  }
+  if (action.type === "ADDEDUSER_STATE") {
+    return { ...state, addedUser: action.val };
+  }
+};
+
 function App() {
-  const [value, setValue] = useState(null);
-  const [users, setUsers] = useState([]);
-  const [error, setError] = useState(false);
-  const [showCurrentUser, setShowCurrentUser] = useState(false);
-  const [wrongUserName, setWrongUserName] = useState(false);
-  const [detailedUser, setDetailedUser] = useState();
-  const [addedUser, setAddedUser] = useState(false);
+  const [allStates, dispatchAllStates] = useReducer(stateReducer, {
+    value: null,
+    users: JSON.parse(localStorage.getItem("users")),
+    error: false,
+    showCurrentUser: false,
+    wrongUserName: false,
+    detailedUser: null,
+    addedUser: false,
+  });
 
   const inputValueHandler = (v) => {
     if (v === "") {
-      setError(true);
+      dispatchAllStates({ type: "ERROR_STATE", val: true });
     }
     setTimeout(() => {
-      setError(false);
+      dispatchAllStates({ type: "ERROR_STATE", val: false });
     }, 2000);
-    if (users.length > 0) {
-      users.map((user) => {
+    if (allStates.users.length > 0) {
+      allStates.users.map((user) => {
         if (v === user.login.toLowerCase()) {
-          setAddedUser(true);
+          dispatchAllStates({ type: "ADDEDUSER_STATE", val: true });
           setTimeout(() => {
-            setAddedUser(false);
+            dispatchAllStates({ type: "ADDEDUSER_STATE", val: false });
           }, 2000);
         }
       });
     }
-    setValue(v);
+    dispatchAllStates({ type: "VALUE_STATE", val: v });
   };
 
   useEffect(() => {
-    let newUsers = users.length > 0 ? [...users] : [];
+    let newUsers = allStates.users.length > 0 ? allStates.users : [];
 
-    if (value === "" || value === undefined) {
-      setWrongUserName(false);
-      setError(true);
+    if (allStates.value === "" || allStates.value === undefined) {
+      dispatchAllStates({ type: "WRONGUSERNAME_STATE", val: false });
+      dispatchAllStates({ type: "ERROR_STATE", val: true });
       setTimeout(() => {
-        setError(false);
+        dispatchAllStates({ type: "ERROR_STATE", val: false });
       }, 2000);
       return;
     }
-    fetch(`https://api.github.com/users/${value}`)
+    fetch(`https://api.github.com/users/${allStates.value}`)
       .then((response) => {
         if (response.status === 200) {
-          setWrongUserName(false);
-          setError(false);
+          dispatchAllStates({ type: "WRONGUSERNAME_STATE", val: false });
+          dispatchAllStates({ type: "ERROR_STATE", val: false });
           return response.json();
         } else {
-          setError(false);
-          setWrongUserName(true);
+          dispatchAllStates({ type: "ERROR_STATE", val: false });
+          dispatchAllStates({ type: "WRONGUSERNAME_STATE", val: true });
           setTimeout(() => {
-            setWrongUserName(false);
+            dispatchAllStates({ type: "WRONGUSERNAME_STATE", val: false });
           }, 2000);
         }
       })
       .then((data) => {
         if (data.login !== "null") {
-          const checkedUsers = users.filter((user) => {
+          const checkedUsers = allStates.users.filter((user) => {
             return user.id !== data.id;
           });
           newUsers = [data, ...checkedUsers];
-          setUsers(newUsers);
+          localStorage.setItem("users", JSON.stringify(newUsers))
+          dispatchAllStates({ type: "SETUSERS_STATE", val: JSON.parse(localStorage.getItem("users")) });
         }
-        setUsers(newUsers);
+        dispatchAllStates({ type: "SETUSERS_STATE", val: newUsers });
       })
       .catch((err) => console.log(err));
-  }, [value]);
-
+  }, [allStates.value]);
   const currentUserHandler = () => {
-    setShowCurrentUser(false);
+    dispatchAllStates({ type: "CURRENTUSER_STATE", val: false });
   };
 
   const detailHandler = (id) => {
-    const newDetailedUser = users.filter((user) => user.id === id);
-    setDetailedUser(newDetailedUser);
-    setShowCurrentUser(true);
+    const newDetailedUser = allStates.users.filter((user) => user.id === id);
+    dispatchAllStates({ type: "DETAILEDUSER_STATE", val: newDetailedUser });
+    dispatchAllStates({ type: "CURRENTUSER_STATE", val: true });
   };
 
   const deleteUserHandler = (id) => {
-    const newUsers = users.filter((user) => user.id !== id);
-    setUsers(newUsers);
-    setValue(null);
+    const newUsers = allStates.users.filter((user) => user.id !== id);
+    localStorage.setItem("users", JSON.stringify(newUsers));
+    dispatchAllStates({ type: "SETUSERS_STATE", val: JSON.parse(localStorage.getItem("users")) });
+    dispatchAllStates({ type: "VALUE_STATE", val: null });
   };
 
   const changeHandler = (v) => {
-    setAddedUser(false);
-    setError(v);
-    setWrongUserName(v);
+    dispatchAllStates({ type: "ADDEDUSER_STATE", val: false });
+    dispatchAllStates({ type: "ERROR_STATE", val: v });
+    dispatchAllStates({ type: "WRONGUSERNAME_STATE", val: v });
   };
 
   const warningStyles = {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     width: "100%",
@@ -103,27 +130,30 @@ function App() {
     color: "#fff",
     padding: "1rem 1rem",
     backgroundColor: "darkred",
-    textAlign: "center"
+    textAlign: "center",
   };
 
   return (
     <div className="App">
-      {error && <p style={warningStyles}>Please type a username!</p>}
-      {wrongUserName && <p style={warningStyles}>Wrong username!</p>}
-      {addedUser && (
+      {allStates.error && <p style={warningStyles}>Please type a username!</p>}
+      {allStates.wrongUserName && <p style={warningStyles}>Wrong username!</p>}
+      {allStates.addedUser && (
         <p style={warningStyles}>This user already added to list!</p>
       )}
-      {showCurrentUser && (
-        <CurrentUser onClick={currentUserHandler} user={detailedUser} />
+      {allStates.showCurrentUser && (
+        <CurrentUser
+          onClick={currentUserHandler}
+          user={allStates.detailedUser}
+        />
       )}
       <Header />
       <UserForm
         getInputValue={inputValueHandler}
         changeHandler={changeHandler}
       />
-      {users.length > 0 && (
+      {allStates.users.length > 0 && (
         <UsersList
-          allUsers={users}
+          allUsers={allStates.users}
           onClick={detailHandler}
           onDelete={deleteUserHandler}
         />
